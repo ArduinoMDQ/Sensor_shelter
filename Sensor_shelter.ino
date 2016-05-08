@@ -28,23 +28,21 @@
  */
 
 int sensorPin = A0;    // select the input pin for the potentiometer
-int ledPin = 13;      // select the pin for the LED
+
 int ena485=2;
-int sensorValue = 0;  // variable to store the value coming from the sensor
 
 
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 
 void setup() {
-    Serial.begin(9600);
-  // declare the ledPin as an OUTPUT:
-  pinMode(ledPin, OUTPUT);
+  Serial.begin(9600);
+
   pinMode(ena485, OUTPUT);
   
   digitalWrite(ena485,HIGH);
-  delay(50);
-  Serial.println("Inicio Sensor");
+  //delay(10);
+  Serial.println("Sensor OK!!");
   delay(50);
   digitalWrite(ena485,LOW);
 
@@ -52,33 +50,16 @@ void setup() {
 
 void loop() {
   
-   serialEvent(); //call the function
-  // print the string when a newline arrives:
-  if (stringComplete) {
-    digitalWrite(ena485,HIGH);
-    delay(50);
-    Serial.println(inputString);
-    delay(50);
-    digitalWrite(ena485,LOW);
-    
-    // clear the string:
-    inputString = "";
-    stringComplete = false;
-  }
+   serialEvent();
+   if (stringComplete) 
+        {
+        comandos(inputString);
+        inputString = "";
+        stringComplete = false;
+        }
 
-  
-  // read the value from the sensor:
-  sensorValue = analogRead(sensorPin);
-   /* delay(5000);
-     digitalWrite(ena485,HIGH);
-     delay(50);
-    Serial.println("Necesito el koinnor EDGARDO !!!");
-    Serial.print("Temperatura del Shelter Balcarce 24:");
-    Serial.print(sensorValue);Serial.print("ºC");
-     Serial.println();
-     delay(50);
-     digitalWrite(ena485,LOW);*/
-     
+
+ 
 }
 
 
@@ -98,3 +79,48 @@ void serialEvent() {
   }
   
 }
+
+void comandos(String com){
+
+  int sensorValue =0;
+   float voltage=0;
+    float temp=0;
+ char com_char;
+
+  com_char=inputString[0];
+
+   switch (com_char) {
+      case 't':
+      
+        digitalWrite(ena485,HIGH);
+        delay(50);
+        sensorValue= analogRead(0);
+        Serial.print(sensorValue);Serial.println(" Dac");
+        voltage= sensorValue*(5.0 / 1023.0);
+        Serial.print(voltage);Serial.println(" Volts");
+        temp=(sensorValue/1024.0)*500;
+        Serial.print(temp);Serial.println(" ºC");
+        delay(50);
+        digitalWrite(ena485,LOW);
+        break;
+      case 'b':
+        digitalWrite(ena485,HIGH);
+        delay(50);
+        Serial.println("Medicion de Baliza");
+       delay(50);
+        digitalWrite(ena485,LOW);
+        
+        break;
+      case 'r':
+       
+        digitalWrite(ena485,HIGH);
+        delay(50);
+        Serial.println("Encender Extractor");
+       delay(50);
+        digitalWrite(ena485,LOW);
+        break;
+      default:break;
+   }  
+  
+  
+  }
