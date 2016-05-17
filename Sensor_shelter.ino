@@ -1,65 +1,62 @@
-/*
-  Analog Input
- Demonstrates analog input by reading an analog sensor on analog pin 0 and
- turning on and off a light emitting diode(LED)  connected to digital pin 13.
- The amount of time the LED will be on and off depends on
- the value obtained by analogRead().
-
- The circuit:
- * Potentiometer attached to analog input 0
- * center pin of the potentiometer to the analog pin
- * one side pin (either one) to ground
- * the other side pin to +5V
- * LED anode (long leg) attached to digital output 13
- * LED cathode (short leg) attached to ground
-
- * Note: because most Arduinos have a built-in LED attached
- to pin 13 on the board, the LED is optional.
-
-
- Created by David Cuartielles
- modified 30 Aug 2011
- By Tom Igoe
-
- This example code is in the public domain.
-
- http://www.arduino.cc/en/Tutorial/AnalogInput
-
- */
-
-int sensorPin = A0;    // select the input pin for the potentiometer
-
+#include "DHT.h"
+#define DHTPIN 8
+#define DHTTYPE DHT11
+DHT dht(DHTPIN, DHTTYPE);
+int sensorPin = A0;
 int ena485=2;
-
-
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
+boolean loopSensor=false;
+float h =0;
+float t = 0;
 
 void setup() {
-  Serial.begin(9600);
-
   pinMode(ena485, OUTPUT);
-  
-  digitalWrite(ena485,HIGH);
-  //delay(10);
-  Serial.println("Sensor OK!!");
+  digitalWrite(ena485,HIGH);Serial.begin(9600);
+  dht.begin();// Iniciamos el sensor​
+  Serial.println("Equipo Iniciado !!!");
   delay(50);
   digitalWrite(ena485,LOW);
-
 }
 
 void loop() {
-  
+ 
    serialEvent();
+   while(loopSensor)
+   {
+     h=dht.readHumidity();
+        t=dht.readTemperature();
+        digitalWrite(ena485,HIGH);
+        delay(50);
+        if (isnan(t) || isnan(h)) {
+            Serial.println("Error");
+        } else {
+            Serial.print("H: ");
+            Serial.print(h);
+            Serial.print("%\t ");
+            Serial.print("T: ");
+            Serial.print(t);
+            Serial.println("°C");
+             };
+        delay(50);
+  digitalWrite(ena485,LOW);
+      serialEvent();
+       if (stringComplete) 
+        {
+        comandos(inputString);
+        inputString = "";
+        stringComplete = false;
+        }
+        delay(1000);
+   }
+   
+   
    if (stringComplete) 
         {
         comandos(inputString);
         inputString = "";
         stringComplete = false;
         }
-
-
- 
 }
 
 
@@ -77,50 +74,63 @@ void serialEvent() {
       stringComplete = true;
     }
   }
-  
+ 
 }
 
 void comandos(String com){
 
   int sensorValue =0;
-   float voltage=0;
-    float temp=0;
- char com_char;
+  float voltage=0;
+  float temp=0;
+
+  char com_char;
 
   com_char=inputString[0];
 
-   switch (com_char) {
+  switch (com_char) {
       case 't':
-      
+        h=dht.readHumidity();
+        t=dht.readTemperature();
+        digitalWrite(ena485,HIGH);
+        delay(50);
+        if (isnan(t) || isnan(h)) {
+            Serial.println("Error");
+        } else {
+            Serial.print("H: ");
+            Serial.print(h);
+            Serial.print(" %\t ");
+            Serial.print("T: ");
+            Serial.print(t);
+            Serial.println(" °C");
+             };
+        break;
+      case 'b':
         digitalWrite(ena485,HIGH);
         delay(50);
         sensorValue= analogRead(0);
         Serial.print(sensorValue);Serial.println(" Dac");
         voltage= sensorValue*(5.0 / 1023.0);
         Serial.print(voltage);Serial.println(" Volts");
-        temp=(sensorValue/1024.0)*500;
-        Serial.print(temp);Serial.println(" ºC");
-        delay(50);
-        digitalWrite(ena485,LOW);
         break;
-      case 'b':
-        digitalWrite(ena485,HIGH);
-        delay(50);
-        Serial.println("Medicion de Baliza");
-       delay(50);
-        digitalWrite(ena485,LOW);
         
-        break;
       case 'r':
-       
         digitalWrite(ena485,HIGH);
         delay(50);
         Serial.println("Encender Extractor");
-       delay(50);
-        digitalWrite(ena485,LOW);
         break;
-      default:break;
+      case 'l':
+        loopSensor=!loopSensor;
+        digitalWrite(ena485,HIGH);
+        delay(50);
+        Serial.print("loop:");
+        Serial.println(loopSensor);
+        break;  
+      default:
+        break;
    }  
+   
+  delay(50);
+  digitalWrite(ena485,LOW);
   
   
   }
