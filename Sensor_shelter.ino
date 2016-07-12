@@ -1,53 +1,62 @@
+#include <TimerOne.h>
+
+
 #include "DHT.h"
 #define DHTPIN 8
 #define DHTTYPE DHT11
+
+
 DHT dht(DHTPIN, DHTTYPE);
 int sensorPin = A0;
 int ena485=2;
+int ID=1;
+String tag="Balcarce 24 y 25";
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
 boolean loopSensor=false;
 float h =0;
 float t = 0;
+int contador=0;
 
 void setup() {
   pinMode(ena485, OUTPUT);
   digitalWrite(ena485,HIGH);Serial.begin(9600);
   dht.begin();// Iniciamos el sensor​
-  Serial.println("Equipo Iniciado !!!");
+  Serial.println(tag);
   delay(50);
   digitalWrite(ena485,LOW);
+  Timer1.initialize(100000);  // 250 ms
+  Timer1.attachInterrupt( ISR_CheckSerial) ;
 }
 
 void loop() {
  
-   serialEvent();
+//   serialEvent();
    while(loopSensor)
-   {
+   { contador++;
      h=dht.readHumidity();
         t=dht.readTemperature();
         digitalWrite(ena485,HIGH);
         delay(50);
         if (isnan(t) || isnan(h)) {
-            Serial.println("Error");
+            Serial.println("ID 1 00.00 00.00");
         } else {
-            Serial.print("H: ");
-            Serial.print(h);
-            Serial.print("%\t ");
-            Serial.print("T: ");
-            Serial.print(t);
-            Serial.println("°C");
+            Serial.print("N:");Serial.print(contador);
+            Serial.print(" Temp:");Serial.print(t);
+            Serial.print(" Hum:");Serial.print(h);
+            Serial.print(" - ");Serial.println(tag);
+         
              };
         delay(50);
   digitalWrite(ena485,LOW);
-      serialEvent();
+    //  serialEvent();
        if (stringComplete) 
         {
         comandos(inputString);
         inputString = "";
         stringComplete = false;
         }
-        delay(1000);
+        delay(5000);
    }
    
    
@@ -94,30 +103,28 @@ void comandos(String com){
         digitalWrite(ena485,HIGH);
         delay(50);
         if (isnan(t) || isnan(h)) {
-            Serial.println("Error");
-        } else {
-            Serial.print("H: ");
-            Serial.print(h);
-            Serial.print(" %\t ");
-            Serial.print("T: ");
-            Serial.print(t);
-            Serial.println(" °C");
-             };
+        Serial.println("ID 1 00.00 C 00.00 H");} 
+        else {
+            Serial.print("N:");Serial.print(contador);
+            Serial.print(" Temp:");Serial.print(t);
+            Serial.print(" Hum:");Serial.print(h);
+            Serial.print(" - ");Serial.println(tag);
+               };
         break;
       case 'b':
         digitalWrite(ena485,HIGH);
         delay(50);
         sensorValue= analogRead(0);
-        Serial.print(sensorValue);Serial.println(" Dac");
+        Serial.print(sensorValue);Serial.println("ID ");  Serial.print(ID);
         voltage= sensorValue*(5.0 / 1023.0);
-        Serial.print(voltage);Serial.println(" Volts");
+        Serial.println(voltage);
         break;
         
-      case 'r':
+   /*   case 'r':
         digitalWrite(ena485,HIGH);
         delay(50);
         Serial.println("Encender Extractor");
-        break;
+        break;*/
       case 'l':
         loopSensor=!loopSensor;
         digitalWrite(ena485,HIGH);
@@ -129,8 +136,14 @@ void comandos(String com){
         break;
    }  
    
-  delay(50);
+  delay(100);
   digitalWrite(ena485,LOW);
   
   
   }
+  
+  void ISR_CheckSerial(){
+    serialEvent();
+  
+  }
+
