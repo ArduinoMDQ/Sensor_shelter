@@ -1,12 +1,11 @@
 #include "DHT.h"
-
 #define DHTPIN 8
 #define DHTTYPE DHT11
 
 DHT dht(DHTPIN, DHTTYPE);
 int sensorPin = A0;
 int ena485=2;
-int id=1;
+int id=1; // Id de identificacion del dispositivo
 
 String inputString = "";         // a string to hold incoming data
 boolean stringComplete = false;  // whether the string is complete
@@ -42,6 +41,7 @@ void serialEvent() {
     char inChar = (char)Serial.read();
     inputString += inChar;
     if (inChar == '\r') {
+      
       stringComplete = true;
     }
   }
